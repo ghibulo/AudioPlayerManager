@@ -4,6 +4,14 @@ import 'dart:io';
 import 'dart:collection'; 
 import 'dart:math';
 
+bool DEBUG = true;
+
+void debugPrint(String what) {
+    if (DEBUG) {
+        print(what);
+    }
+}
+
 List decodeTrackName(String trackName) {
 
     List listTrackName = trackName.split('=');
@@ -30,11 +38,13 @@ String encodeTrackName(List<String> indexAlbumName) {
     if (indexAlbumName.length < 3) {
         throw new Exception("${indexAlbumName} can't be encoded!");
     }
-    return "${indexAlbumName[0]}=${indexAlbumName[1]}=${indexAlbumName[2]}"
+    return "${indexAlbumName[0]}=${indexAlbumName[1]}=${indexAlbumName[2]}";
 }
 
 
 List getContentPlayer (String playerPathName) {
+
+    debugPrint("getContentPlayer: playerPathName = ${playerPathName}");
 
     var dir = new Directory(playerPathName);
     List contents = dir.listSync();
@@ -43,10 +53,15 @@ List getContentPlayer (String playerPathName) {
     for (var fileOrDir in contents) {
         if (fileOrDir is File) {
             String trackName = fileOrDir.path.split('/').last;
-            print(trackName);
+            debugPrint(trackName);
             List listTrack = decodeTrackName(trackName);
             if (listTrack != null) {
-                result1[listTrack[1][2]] = (result1[listTrack[1][2]] == null)? [listTrack[0]] : result1[listTrack[1][2]].add(listTrack[0]); 
+                //result1[listTrack[1][2]] = ( (result1[listTrack[1][2]] == null) ? [listTrack[0]] : result1[listTrack[1][2]].add(listTrack[0]) ); 
+                if (result1[listTrack[1][2]] == null) {
+                    result1[listTrack[1][2]] = [listTrack[0]];
+                } else {
+                    result1[listTrack[1][2]].add(listTrack[0]);
+                }
                 result2[listTrack[0]] = listTrack[1];
             }
         } 
@@ -97,7 +112,7 @@ Map<int,List<String>> createSongsLine(Map parsedConfig) {
             int firstTrackIndex = index;
             for (var track in tracks) {
                 if (track[0] == "on") {
-                    result[index++] = ["${albumItem}${folder}", "${track[1]}", mirrorFolder];
+                    result[index++] = ["${folder}", "${track[1]}", mirrorFolder];
                 }
             }
             int lastTrackIndex = index-1;
@@ -112,7 +127,7 @@ Map<int,List<String>> createSongsLine(Map parsedConfig) {
     } else {
         orderLimits["bigshuffle"] = [];
     }
-    print("orderLimits.... $orderLimits");
+    debugPrint("orderLimits.... $orderLimits");
     //set indexes to the tracks
     if (orderLimits['normal'].length > 1) {
         for (int i=0; i <= orderLimits['normal'][1]; i++) {
@@ -181,43 +196,71 @@ Future<File> moveFile(File sourceFile, String newPath) async {
 }
 
 
-void renameTrack(String path, String name, List configTrack) {
+void renameTrack(String path, String name, List configTrack) async {
 
+    debugPrint("renameTrack: path=${path}, name=${name}, configTrack=${configTrack}");
     File renamedFile = new File("${path}/${name}");
-    String newPathName = "${path}/${encodeTrackName(configTrack)}"
+    String newPathName = "${path}/${encodeTrackName(configTrack)}";
     try {
 
         await renamedFile.rename("${newPathName}");
-        print("Track ${name} renamed according ${configTrack}");
+        debugPrint("Track ${name} renamed according ${configTrack}");
 
     } on FileSystemException catch (e) {
         File sourceFile = new File("${configTrack[3]}/${encodeTrackName(configTrack)}");
         final newFile = await sourceFile.copy(newPathName);
-        print("Track ${configTrack} has to be copied to ${path}");
+        debugPrint("Track ${configTrack} has to be copied to ${path}");
     }
 
 }
 
 
-void synchronize(Map<int,List<String>> wishLine, String mountFolder) {
+void synchronize(Map<int,List<String>> wishLine, String mountFolder) async {
 
-    List contentPlayer = getContentPlayer (configData["mount_folder"]);
+    List contentPlayer = getContentPlayer (mountFolder);
 
     Map<String,List<int>> testExistMap = contentPlayer[0];
     Map<int,List<String>> dataMap = contentPlayer[1];
 
+    if (DEBUG) {
+        debugPrint("testExistMap = ${testExistMap}");
+        debugPrint("dataMap = ${dataMap}");
+    }
+
     for (var item in wishLine.keys) {
+        int found = -1;
         List<String> configTrack = wishLine[item];
+        debugPrint("synchronize: configTrack = ${configTrack}");
         if (testExistMap[configTrack[2]] != null) {
-            for (index in testExistMap[configTrack[2]) { //the same trackName in different albums
+            debugPrint("synchronize: testExistMap = ${testExistMap[configTrack[2]]}");
+            for (var index in testExistMap[configTrack[2]]) { //the same trackName in different albums
                 List<String> playerTrack = dataMap[index];
                 if (playerTrack[1] == configTrack[1]) { //albums equal
-                   renameTrack("${mountFolder}/${encodeTrackName(playerTrack)}", configTrack); 
+                   renameTrack("${mountFolder}", "${encodeTrackName(playerTrack)}", configTrack); 
+                   found = index;
+                   break;
                 }
-
             }
+        } else {
+            String configTrackName = "${encodeTrackName(configTrack)}";
+            debugPrint("copying ${configTrack[3]}/${configTrack[1]}/${configTrack[2]} -> ${mountFolder}/${configTrackName}");
+
+            String newPathName = "${mountFolder}/${configTrackName}";
+            File sourceFile = new File("${configTrack[3]}/${configTrack[1]}/${configTrack[2]}");
+            final newFile = await sourceFile.copy(newPathName);
         }
-        
+        if (found > -1) { 
+            testExistMap[configTrack[2]].remove(found); //the rest will be renamed by extension 'off'
+        } 
+    }
+    //the remaining files in the mountFolder must be renamed to off
+    for (var item in testExistMap.keys) {
+
+        for (var index in testExistMap[item]) {
+            
+
+        }
+
     }
     
 
@@ -232,10 +275,10 @@ void main() {
     Map<int,List<String>> wishLine = createSongsLine(configData);
     for (var item in wishLine.keys) {
         List<String> name = wishLine[item];
-        print("${item} - ${name} \n");
+        debugPrint("${item} - ${name} \n");
     }
-	print("----");
-    syncronize(wishLine, configData["mount_folder"]);
+	debugPrint("----");
+    synchronize(wishLine, configData["mount_folder"]);
   });
 
 /*
