@@ -8,16 +8,16 @@ mirror_folder="/home/ghibulo/programovani/dart/mirrorFolder"
       state="on"
       order="shuffle" #normal/shuffle/bigshuffle
       tracks =	[
-        ["off", "01. Bad Boy.flac"],
+        ["on", "01. Bad Boy.flac"],
         ["off", "06. Hard Luck Blues.flac"],
-        ["on", "03. I Got Money.flac"],
-        ["on", "12. _  Country Joyride.flac"]
+        ["off", "03. I Got Money.flac"],
+        ["off", "12. _  Country Joyride.flac"]
       ]
 
     [album.2]
       mirror_folder="/home/ghibulo/Downloads/hudba"
       folder="zp1"
-      state="off"
+      state="on"
       order="normal" #normal/shuffle/bigshuffle
       tracks =	[
         ["on", "04_Povesen za krk.mp3"],
