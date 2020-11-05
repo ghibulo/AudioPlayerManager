@@ -248,7 +248,12 @@ void renameTrack(String path, String name,
     throw new Exception(
         "Function renameTrack needs either listNewName or stringNewName!");
   }
-  File renamedFile = new File("${path}/${name}");
+  String renamedPathName = "${path}/${name}";
+  if (renamedPathName == newPathName) {
+    print("Useless to rename the same file ${renamedPathName}");
+    return;
+  }
+  File renamedFile = new File(renamedPathName);
   try {
     await renamedFile.rename("${newPathName}");
     debugPrint("Track ${name} renamed according ${optionalParameter}");
@@ -259,7 +264,7 @@ void renameTrack(String path, String name,
       final newFile = await sourceFile.copy(newPathName);
       debugPrint("Track ${listNewName} has to be copied to ${path}");
     } else {
-      print("There is problem to rename/copy path=${path}, name=${name}, stringNewName=${stringNewName}");
+      print("There is problem to rename/copy path=${path}, name=${name}, stringNewName=${stringNewName}: ${e}");
     }
   }
 }
@@ -270,10 +275,8 @@ void synchronize(Map<int, List<String>> wishLine, String mountFolder) async {
   Map<String, List<int>> testExistMap = contentPlayer[0];
   Map<int, List<List<String>>> dataMap = contentPlayer[1];
 
-  if (DEBUG) {
-    debugPrint("testExistMap = ${testExistMap}");
-    debugPrint("dataMap = ${dataMap}");
-  }
+  debugPrint("testExistMap = ${testExistMap}");
+  debugPrint("dataMap = ${dataMap}");
 
   for (var item in wishLine.keys) {
     int found = -1;
@@ -322,17 +325,26 @@ void synchronize(Map<int, List<String>> wishLine, String mountFolder) async {
           .remove(found); //the rest will be renamed by extension 'off'
     }
   }
-  //the remaining files in the mountFolder must be renamed to off
+  debugPrint("the remaining files in the mountFolder must be renamed to off");
+  debugPrint("testExistMap = ${testExistMap}");
+  debugPrint("dataMap = ${dataMap}");
   for (var item in testExistMap.keys) {
     for (var index in testExistMap[item]) {
+      List<List<String>> switchedOff = [];
       for (List<String> playerTrack in dataMap[index]) {
         String trackToOff = encodeTrackName(playerTrack);
         Map<String, String> stateTheTrack = switchTrack(false, trackToOff);
         if (stateTheTrack["previous"] != ".OFF") {
           renameTrack("${mountFolder}", trackToOff,
               stringNewName: stateTheTrack["switched"]);
+          switchedOff.add(playerTrack);
         }
       }//for (List<String> playerTrack...
+      //what was renamed to OFF must be removed from dataMap[index]
+      //to avoid trying to rename it again
+      for (List<String> switchedOffTrack in switchedOff) {
+        dataMap[index].remove(switchedOffTrack);
+      }
     }
   }
 }
