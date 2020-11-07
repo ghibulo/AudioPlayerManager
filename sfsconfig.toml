@@ -4,7 +4,7 @@ mirror_folder = "/home/ghibulo/programovani/dart/mirrorFolder"
 [album]
 
 [album.1]
-mirror_folder = "/home/ghibulo/Downloads/hudba"
+mirror_folder = "/home/ghibulo/Desktop/Zvuk/Cteni/beletrieCj"
 folder = "zp1"
 state = "on"
 order = "normal" #normal/shuffle/bigshuffle
@@ -22,7 +22,7 @@ tracks =	[
 
 
 [album.2]
-mirror_folder = "/home/ghibulo/Downloads/hudba"
+mirror_folder = "/home/ghibulo/Desktop/Zvuk/Cteni/beletrieCj"
 folder = "zp2"
 state = "off"
 order = "shuffle" #normal/shuffle/bigshuffle
@@ -41,7 +41,7 @@ tracks =	[
 ]
 
 [album.x]
-mirror_folder = "/home/ghibulo/Downloads/hudba"
+mirror_folder = "/home/ghibulo/Desktop/Zvuk/Hudba/MagicSlim"
 folder = "flac"
 state = "on"
 order = "bigshuffle" #normal/shuffle/bigshuffle

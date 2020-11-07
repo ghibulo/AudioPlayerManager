@@ -353,7 +353,7 @@ void main(List<String> arguments) {
   if (arguments.length != 1) {
     throw new Exception("Start program with one argument (pathName to the config)! ... e.g. dart tomb.dart config.toml");
   }
-  new File('sfsconfig.toml').readAsString().then((String contents) {
+  new File(arguments[0]).readAsString().then((String contents) {
     var parser = new TomlParser();
     Map configData = new Map.from(parser.parse(contents).value);
     Map<int, List<String>> wishLine = createSongsLine(configData);
