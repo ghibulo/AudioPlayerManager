@@ -1,13 +1,10 @@
-#mount_folder = "/media/ghibulo/G118S"
-#mirror_folder = "/home/ghibulo/programovani/dart/mirrorFolder"
-
-root = "/home/ghibulo/Desktop/Zvuk"
-
+source_config = "/home/ghibulo/IdeaProjects/AudioPlayerManager/sfsconfig.toml"
+mount_folder = "/home/ghibulo/programovani/dart/mountFolder"
 
 [album1]
 mirror_folder = "./Cteni/beletrieCj"
 folder = "zp1"
-order = "normal" #normal/shuffle/bigshuffle
+order = "bigshuffle" #normal/shuffle/bigshuffle
 tracks =	[
     "04_Povesen za krk.mp3",
     "03_Pompeje dvaceteho stoleti.mp3",
@@ -20,11 +17,10 @@ tracks =	[
     "02_Blucher priplouva.mp3"
 ]
 
-
 [album2]
 mirror_folder = "./Cteni/beletrieCj"
 folder = "zp2"
-order = "shuffle" #normal/shuffle/bigshuffle
+order = "bigshuffle" #normal/shuffle/bigshuffle
 tracks =	[
     "03_Male nocni slunce (128).mp3",
     "02_Kletba oceanu (128).mp3",
@@ -55,3 +51,4 @@ tracks = [
     "02. Someone Else Is Steppin' In.flac",
     "09. How Much More Long.flac"
 ]
+

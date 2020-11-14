@@ -1,7 +1,4 @@
-import 'package:toml/decoder.dart';
-import 'dart:async';
 import 'dart:io';
-import 'dart:collection';
 
 bool DEBUG = true;
 
@@ -15,13 +12,12 @@ void writeAlbum (StringBuffer theOutput, String albumPathName) {
 
     debugPrint("writeAlbum: aplbumPathName = ${albumPathName}");
     String albumName = albumPathName.split('/').last;
-    debugPrint("first line... [album.${albumName}]\n");
-    theOutput. writeln('[album.${albumName}]');
+    debugPrint("first line... [${albumName}]\n");
+    theOutput. writeln('[${albumName}]');
     String mirrorFolder = albumPathName.replaceAll("/$albumName", '');
     theOutput.writeln('  mirror_folder="$mirrorFolder"');
     debugPrint('second line...   mirror_folder="$mirrorFolder"\n');
     theOutput.writeln('  folder="$albumName"');
-    theOutput.writeln('  state="off"');
     theOutput.writeln('  order="normal" #normal/shuffle/bigshuffle');
     theOutput.writeln('  tracks =	[');
 
@@ -36,7 +32,7 @@ void writeAlbum (StringBuffer theOutput, String albumPathName) {
         } else {
             theOutput.writeln(',');
         }
-        theOutput.write('    ["on", "$fileName"]');
+        theOutput.write('    "$fileName"');
       } else if (fileOrDir is Directory) {
         print("Skipped folder: $fileOrDir.path");
       }
