@@ -115,7 +115,17 @@ Map getOnAlbums(Map allAlbums, String order) {
   return result;
 }
 
-Map<int, List<String>> createSongsLine(Map parsedConfig) {
+Map<int, List<String>> createSongsLine(Map activeConfig) {
+  //attempt to get sourceConfig
+  Map sourceConfig = null;
+  if (activeConfig["source_config"] != null) {
+    sourceConfig = getMapFromConfig(activeConfig["source_config"]);
+  }
+  if (sourceConfig == null) {
+    print("There is problem to get data from source_config -> only saved track on the mount_folder can be utilized");
+  }
+  //TODO: prepare data from 2 configs for creating songline
+  //TODO: possibility to work only with activeConfig
   Map<int, List<String>> result = new Map<int, List<String>>();
   //it's useful to save limits in order to randomize tracks suitably
   Map<String, List> orderLimits = {
@@ -135,11 +145,11 @@ Map<int, List<String>> createSongsLine(Map parsedConfig) {
     if ((lastOrder == "shuffle") && (theOrder == "bigshuffle") && (index > 0)) {
       orderLimits["bigshuffle"] = [index];
     }
-    Map albums = getOnAlbums(parsedConfig["album"], theOrder);
+    Map albums = getOnAlbums(activeConfig["album"], theOrder);
 
     for (var albumItem in albums.keys) {
       String mirrorFolder = (albums[albumItem]["mirror_folder"] == null)
-          ? parsedConfig["mirror_folder"]
+          ? activeConfig["mirror_folder"]
           : albums[albumItem]["mirror_folder"];
       List tracks = albums[albumItem]["tracks"];
       String folder = albums[albumItem]["folder"];
@@ -349,21 +359,44 @@ void synchronize(Map<int, List<String>> wishLine, String mountFolder) async {
   }
 }
 
+//get Map from toml config or null in case of problems
+Map getMapFromConfig(String pathName) {
+
+  if (pathName == null) {
+    print("Warning: getMapFromConfig got input parameter = null -> no data");
+    return null;
+  }
+  Map result = null;
+  try {
+    new File(pathName).readAsString().then((String contents) {
+      var parser = new TomlParser();
+      result = new Map.from(parser.parse(contents).value);
+    });
+  } catch(e) {
+    print("Warning: there is problem to read data from config ${pathName}: ${e}");
+  }
+  return result;
+}
+
 void main(List<String> arguments) {
   if (arguments.length != 1) {
     throw new Exception("Start program with one argument (pathName to the config)! ... e.g. dart tomb.dart config.toml");
   }
-  new File(arguments[0]).readAsString().then((String contents) {
-    var parser = new TomlParser();
-    Map configData = new Map.from(parser.parse(contents).value);
-    Map<int, List<String>> wishLine = createSongsLine(configData);
-    for (var item in wishLine.keys) {
-      List<String> name = wishLine[item];
-      debugPrint("${item} - ${name} \n");
-    }
-    debugPrint("----");
-    synchronize(wishLine, configData["mount_folder"]);
-  });
+
+  Map configData = getMapFromConfig(arguments[0]);
+  if (configData == null) {
+    print("There is problem to get data from activeConfig ${arguments[0]}");
+    print("Useless to continue!");
+    return;
+  }
+  Map<int, List<String>> wishLine = createSongsLine(configData);
+  for (var item in wishLine.keys) {
+    List<String> name = wishLine[item];
+    debugPrint("${item} - ${name} \n");
+  }
+  debugPrint("----");
+  synchronize(wishLine, configData["mount_folder"]);
+}
 
 /*
 ----------------------------------------
@@ -377,4 +410,3 @@ void main(List<String> arguments) {
 	print(document["plugins"]["diff"]["default"][1]);
   });
 */
-}
